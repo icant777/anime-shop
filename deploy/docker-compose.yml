@@ -1,0 +1,75 @@
+# ============================================================
+#  动漫周边商城 - Docker 一键部署
+#  用法：先 cp .env.example .env 并填入密码，再 docker compose up -d
+#  密码只从 .env 读取，仓库里不含任何真实密码
+# ============================================================
+
+services:
+  # ---------- MySQL 8.0 ----------
+  mysql:
+    image: mysql:8.0
+    container_name: anime-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_PASS:?请先在 .env 里设置 MYSQL_PASS}"
+      TZ: Asia/Shanghai
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_PASS}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # ---------- Redis ----------
+  redis:
+    image: redis:7-alpine
+    container_name: anime-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # ---------- Spring Boot 后端 ----------
+  backend:
+    build: ./backend
+    container_name: anime-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SERVER_PORT: 9091
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: xym-work
+      MYSQL_USER: root
+      MYSQL_PASS: "${MYSQL_PASS:?请先在 .env 里设置 MYSQL_PASS}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      VIDEO_DIR: /app/uploads/video
+      TZ: Asia/Shanghai
+    volumes:
+      - video_data:/app/uploads/video
+
+  # ---------- Nginx（前端 + 反向代理）----------
+  nginx:
+    image: nginx:alpine
+    container_name: anime-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ../frontend:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - video_data:/var/www/videos:ro
+    ports:
+      - "80:80"
+
+volumes:
+  mysql_data:
+  redis_data:
+  video_data:

@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:9091}
+
+spring:
+  application:
+    name: anime-backend
+
+  # 数据源：全部走环境变量，仓库里不放真实密码
+  # 本地 IDEA：Run Configuration 的 Environment variables 加 MYSQL_PASS=你的密码
+  # 云上 Docker：由 docker-compose 注入 MYSQL_HOST=mysql 等
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:xym-work}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASS:change-me}
+
+  # Redis：环境变量优先
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: 0
+
+  # 文件上传大小
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# MyBatis-Plus
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl   # 控制台打印 SQL，方便看
+    map-underscore-to-camel-case: true                       # 下划线转驼峰
+  global-config:
+    db-config:
+      id-type: auto                                         # 主键自增（数据库 AUTO_INCREMENT）
+
+# 自定义：视频上传目录（环境变量可覆盖；容器内用 /app/uploads/video）
+app:
+  video-upload-dir: ${VIDEO_DIR:./uploads/video}
