@@ -26,6 +26,9 @@ Thumbs.db
 *.tmp
 _check_*.png
 
+# ===== 本地推送脚本（含 token 输入，不进仓库）=====
+一键推送到GitHub.bat
+
 # ===== Node（若后续加构建） =====
 node_modules/
 dist/
