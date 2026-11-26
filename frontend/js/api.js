@@ -50,7 +50,26 @@
     { id: 5, goodsCode: 'G-005', goodsName: '海贼王·路飞 景品手办', category: '手办', categoryId: 205, minPrice: 168.0, images: '[]' },
     { id: 6, goodsCode: 'G-006', goodsName: '崩坏·星穹铁道 痛包', category: '痛包', categoryId: 206, minPrice: 128.0, images: '[]' },
     { id: 7, goodsCode: 'G-007', goodsName: '排球少年·日向 亚克力挂件', category: '立牌', categoryId: 208, minPrice: 32.0, images: '[]' },
-    { id: 8, goodsCode: 'G-008', goodsName: '间谍过家家·阿尼亚 一番赏', category: '周边', categoryId: 207, minPrice: 68.0, images: '[]' }
+    { id: 8, goodsCode: 'G-008', goodsName: '间谍过家家·阿尼亚 一番赏', category: '周边', categoryId: 207, minPrice: 68.0, images: '[]' },
+    // ===== 补货：每个分类补足到至少 3 件（商品名取自网上真实在售动漫周边） =====
+    // 立牌（201 亚克力立牌 / 208 亚克力挂件）
+    { id: 9, goodsCode: 'G-009', goodsName: '咒术回战 霓虹系列 亚克力立牌', category: '立牌', categoryId: 201, minPrice: 45.0, images: '[]' },
+    { id: 10, goodsCode: 'G-010', goodsName: '原神 六周年庆典 亚克力立牌', category: '立牌', categoryId: 201, minPrice: 59.0, images: '[]' },
+    // 吧唧（202 马口铁吧唧）
+    { id: 11, goodsCode: 'G-011', goodsName: '原神 破格锋镞系列 马口铁徽章', category: '吧唧', categoryId: 202, minPrice: 18.0, images: '[]' },
+    { id: 12, goodsCode: 'G-012', goodsName: '咒术回战 横滨5周年 闪粉收藏徽章', category: '吧唧', categoryId: 202, minPrice: 22.0, images: '[]' },
+    // 色纸（203 签名色纸）
+    { id: 13, goodsCode: 'G-013', goodsName: '原神 无神怜爱的雪国 亚克力色纸', category: '色纸', categoryId: 203, minPrice: 58.0, images: '[]' },
+    { id: 14, goodsCode: 'G-014', goodsName: '初音未来 日巡米山舞 联动色纸', category: '色纸', categoryId: 203, minPrice: 52.0, images: '[]' },
+    // 棉花娃娃（204 正常体娃娃）
+    { id: 15, goodsCode: 'G-015', goodsName: '原神 胡桃 40cm棉花娃娃', category: '棉花娃娃', categoryId: 204, minPrice: 119.0, images: '[]' },
+    { id: 16, goodsCode: 'G-016', goodsName: '排球少年 日向翔阳 10cm棉花娃娃挂件', category: '棉花娃娃', categoryId: 204, minPrice: 49.9, images: '[]' },
+    // 手办（205 景品手办）
+    { id: 17, goodsCode: 'G-017', goodsName: 'FURYU 初音未来 泡面压景品手办', category: '手办', categoryId: 205, minPrice: 83.3, images: '[]' },
+    { id: 18, goodsCode: 'G-018', goodsName: '原神 蒙德城主题 粘土人 凯亚', category: '手办', categoryId: 205, minPrice: 329.0, images: '[]' },
+    // 周边（痛包 206 / 一番赏 207）
+    { id: 19, goodsCode: 'G-019', goodsName: '初音未来 Spark系列 多功能收纳痛包', category: '痛包', categoryId: 206, minPrice: 128.0, images: '[]' },
+    { id: 20, goodsCode: 'G-020', goodsName: 'bilibili 一番赏 初音未来 抽赏', category: '周边', categoryId: 207, minPrice: 28.0, images: '[]' }
   ];
   const categoriesSeed = [
     { id: 1, name: '立牌', children: [{ id: 201, categoryName: '亚克力立牌' }, { id: 208, categoryName: '亚克力挂件' }] },

@@ -31,7 +31,19 @@ public class GoodsService {
         LambdaQueryWrapper<Goods> qw = new LambdaQueryWrapper<>();
         qw.eq(Goods::getStatus, 1).eq(Goods::getDeleted, 0);
         if (categoryId != null) {
-            qw.eq(Goods::getCategoryId, categoryId);
+            // 若传的是一级分类，带出它下面所有二级分类的商品（前端点大类时不应为空）
+            List<GoodsCategory> children = categoryMapper.selectList(
+                    new LambdaQueryWrapper<GoodsCategory>()
+                            .eq(GoodsCategory::getParentId, categoryId)
+                            .eq(GoodsCategory::getStatus, 1));
+            if (children != null && !children.isEmpty()) {
+                List<Long> ids = new ArrayList<>();
+                ids.add(categoryId);
+                for (GoodsCategory c : children) ids.add(c.getId());
+                qw.in(Goods::getCategoryId, ids);
+            } else {
+                qw.eq(Goods::getCategoryId, categoryId);
+            }
         }
         if (keyword != null && !keyword.isBlank()) {
             qw.like(Goods::getGoodsName, keyword);
