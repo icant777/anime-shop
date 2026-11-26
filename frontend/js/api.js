@@ -200,10 +200,21 @@
   global.API = api;
 
   // 商品封面解析：DEMO 与真实后端通用。
-  // 优先按商品编码映射本地图（保证这两件新品在两种模式下都能显示），
-  // 其次尝试解析 images(JSON 数组字符串) 的第一张。
+  // 匹配优先级：① 商品名关键词（覆盖两种模式，最可靠）② 商品编码 ③ images 字段。
   // 注意：真实库里 G-001=初音、G-002=炭治郎（与 DEMO 假数据编码相反），
-  // 所以优先按“商品名关键词”匹配，编码兜底只作备用。
+  // 所以优先按“商品名关键词”匹配，避免编码冲突。
+  const NAME_COVER = [
+    ['炭治郎', 'assets/img/tanjiro.jpg'],
+    ['初音', 'assets/img/miku.jpg'],
+    ['芙莉莲', 'assets/img/frieren-badge.jpg'],
+    ['T恤', 'assets/img/jjk-tshirt.jpg'],
+    ['立牌', 'assets/img/gojo-stand.jpg'],
+    ['拍立得', 'assets/img/jjk-polaroid.jpg'],
+    ['色纸', 'assets/img/genshin-shikishi.jpg'],
+    ['纪念票', 'assets/img/genshin-card.jpg'],
+    ['收藏卡', 'assets/img/genshin-card.jpg'],
+    ['徽章', 'assets/img/genshin-card.jpg']
+  ];
   const LOCAL_COVER = {
     'G-001': 'assets/img/miku.jpg',
     'G-002': 'assets/img/tanjiro.jpg'
@@ -211,9 +222,13 @@
   global.goodsCover = function (g) {
     if (!g) return '';
     const name = g.goodsName || '';
-    if (name.indexOf('炭治郎') >= 0) return 'assets/img/tanjiro.jpg';
-    if (name.indexOf('初音') >= 0) return 'assets/img/miku.jpg';
+    // ① 商品名关键词（ specificity 从具体到宽泛，越靠前越优先）
+    for (let i = 0; i < NAME_COVER.length; i++) {
+      if (name.indexOf(NAME_COVER[i][0]) >= 0) return NAME_COVER[i][1];
+    }
+    // ② 商品编码兜底
     if (g.goodsCode && LOCAL_COVER[g.goodsCode]) return LOCAL_COVER[g.goodsCode];
+    // ③ images 字段（真实后端 JSON 数组字符串）
     try {
       const imgs = JSON.parse(g.images || '[]');
       if (Array.isArray(imgs) && imgs.length) {
