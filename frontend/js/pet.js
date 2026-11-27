@@ -1,14 +1,12 @@
 /* ============================================================
-   pet.js — 桌面宠物（伪 3D 灵动版）
+   pet.js — 桌面宠物（动作版：原地奔跑 / 跳跃 / 互动）
    ------------------------------------------------------------
    皮肤：初音未来 / 五条悟 / 炭治郎，默认初音未来
-   3D 感交互：
-     · 立体倾斜 —— 鼠标在页面移动时桌宠随视线 rotateX/rotateY
-     · 视差层次 —— 表情/闪光/阴影分处不同 Z 轴，随倾斜产生纵深
-     · 呼吸 / 眨眼 / 随机待机动作（歪头、伸懒腰、弹跳、转圈）
-     · Y 轴 360° 翻转换肤，中途切换形象
-     · 动态阴影随姿态伸缩，高光随视角流动
-   保留：台词气泡、皮肤环、点击反应、拖拽与位置持久化
+   动作：
+     · 原地奔跑 —— 待机时持续跑动（颠簸步频 + 前倾 + 扬尘 + 速度线）
+     · 跳跃 —— 鼠标放上去 / 点击时，下蹲蓄力 → 腾空 → 落地压缩
+     · 眨眼 / 随机待机动作（伸懒腰、转圈）/ 翻转换肤
+   保留：台词气泡、皮肤环、点击反应、拖拽与位置持久化、鼠标视角倾斜
    ============================================================ */
 (function (global) {
   const SKINS = [
@@ -29,7 +27,7 @@
     }
   ];
 
-  const IDLE_ACTS = ['act-stretch', 'act-tilt', 'act-bounce', 'act-spin'];
+  const IDLE_ACTS = ['act-stretch', 'act-tilt', 'act-spin'];
 
   const DesktopPet = {
     name: 'DesktopPet',
@@ -38,6 +36,7 @@
         skins: SKINS,
         skinId: localStorage.getItem('sg_pet_skin') || 'miku',
         hover: false,
+        running: true,          // 待机原地奔跑开关
         jumping: false,
         blinking: false,
         flipping: false,
@@ -45,7 +44,7 @@
         showSkins: false,
         bubble: '',
         bubbleKey: 0,
-        rx: 0, ry: 0,           // 3D 倾斜角（度）
+        rx: 0, ry: 0,           // 鼠标视角倾斜角（度）
         gx: 50,                 // 高光位置百分比
         pos: (() => {
           try { return JSON.parse(localStorage.getItem('sg_pet_pos')) || null; } catch (e) { return null; }
@@ -59,6 +58,10 @@
     computed: {
       skin() {
         return this.skins.find(s => s.id === this.skinId) || this.skins[0];
+      },
+      // 真正跑动的条件：待机、不跳、不翻、不拖、无其他待机动作
+      isRun() {
+        return this.running && !this.jumping && !this.flipping && !this.dragging && !this.idleAct && !this.hover;
       },
       style() {
         const base = this.pos
@@ -78,8 +81,8 @@
     },
     mounted() {
       window.addEventListener('mousemove', this.onGlobalMove, { passive: true });
-      this._blinkTimer = setInterval(() => this.blink(), 3600 + Math.random() * 2200);
-      this._actTimer = setInterval(() => this.randomAct(), 6200 + Math.random() * 2600);
+      this._blinkTimer = setInterval(() => this.blink(), 3200 + Math.random() * 2000);
+      this._actTimer = setInterval(() => this.randomAct(), 7000 + Math.random() * 4000);
       this.say('嗨！我是' + this.skin.name + '，点我换皮肤～');
     },
     beforeUnmount() {
@@ -90,7 +93,6 @@
       clearInterval(this._actTimer);
     },
     methods: {
-      // 鼠标位置 → 立体倾斜（越靠近桌宠，视角变化越明显）
       onGlobalMove(e) {
         if (this.dragging || !this.$refs.pet) return;
         const r = this.$refs.pet.getBoundingClientRect();
@@ -98,22 +100,30 @@
         const dx = e.clientX - cx, dy = e.clientY - cy;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const strength = Math.max(0, 1 - dist / 620);
-        const maxX = this.hover ? 20 : 12;
-        const maxY = this.hover ? 28 : 17;
+        const maxX = this.hover ? 16 : 10;
+        const maxY = this.hover ? 22 : 14;
         this.ry = Math.max(-1, Math.min(1, dx / 380)) * maxY * strength;
         this.rx = Math.max(-1, Math.min(1, -dy / 380)) * maxX * strength;
         this.gx = 50 + Math.max(-1, Math.min(1, dx / 300)) * 34 * strength;
       },
       blink() {
-        if (this.dragging || this.flipping) return;
+        if (this.dragging || this.flipping || this.jumping) return;
         this.blinking = true;
         setTimeout(() => { this.blinking = false; }, 150);
       },
       randomAct() {
-        if (this.dragging || this.flipping || this.hover) return;
+        if (this.dragging || this.flipping || this.hover || this.jumping) return;
+        // 偶尔停下奔跑做个动作，之后继续跑
         const act = IDLE_ACTS[Math.floor(Math.random() * IDLE_ACTS.length)];
         this.idleAct = act;
-        setTimeout(() => { if (this.idleAct === act) this.idleAct = ''; }, 1300);
+        setTimeout(() => { if (this.idleAct === act) this.idleAct = ''; }, 1400);
+      },
+      jump() {
+        if (this.dragging || this.flipping || this.jumping) return;
+        this.idleAct = '';
+        this.jumping = true;
+        clearTimeout(this._jumpTimer);
+        this._jumpTimer = setTimeout(() => { this.jumping = false; }, 780);
       },
       say(text) {
         this.bubble = text;
@@ -124,12 +134,13 @@
       react() {
         const list = this.skin.lines;
         this.say(list[Math.floor(Math.random() * list.length)]);
-        this.idleAct = '';
-        this.jumping = true;
-        clearTimeout(this._jumpTimer);
-        this._jumpTimer = setTimeout(() => { this.jumping = false; }, 700);
+        this.jump();
       },
-      onEnter() { this.hover = true; },
+      // 鼠标放上去 → 跳
+      onEnter() {
+        this.hover = true;
+        this.jump();
+      },
       onLeave() {
         this.hover = false;
         this.rx = 0; this.ry = 0; this.gx = 50;
@@ -144,7 +155,6 @@
         this.showSkins = false;
         this.idleAct = '';
         this.flipping = true;
-        // 转到侧面（350ms）时换图，转完恢复
         setTimeout(() => {
           this.skinId = id;
           localStorage.setItem('sg_pet_skin', id);
@@ -201,16 +211,21 @@
         <!-- 可倾斜的角色本体 -->
         <div class="pet-body" @mouseenter="onEnter" @mouseleave="onLeave"
              @mousedown="onDown" @click="onClick">
-          <div class="pet-inner" :class="idleAct">
+          <!-- 奔跑速度线（身后） -->
+          <div class="pet-speed" v-if="isRun"><i></i><i></i><i></i></div>
+          <div class="pet-inner" :class="{'is-running':isRun, 'act-stretch':idleAct==='act-stretch',
+               'act-tilt':idleAct==='act-tilt','act-spin':idleAct==='act-spin'}">
             <img :src="skin.img" :alt="skin.name" draggable="false">
             <div class="pet-gloss"></div>
           </div>
+          <!-- 脚下扬尘（奔跑时出现） -->
+          <div class="pet-dust" v-if="isRun"><i></i><i></i><i></i><i></i></div>
           <!-- 表情与闪光：独立 Z 轴产生视差 -->
           <div class="pet-face" :key="skinId+'-'+(hover?'h':'n')">{{faceText}}</div>
           <div class="pet-sparkles" v-if="hover">
             <i style="--i:0">✦</i><i style="--i:1">♥</i><i style="--i:2">✧</i>
           </div>
-          <div class="pet-shadow"></div>
+          <div class="pet-shadow" :class="{'is-run':isRun}"></div>
         </div>
         <div class="pet-name">{{skin.name}}</div>
       </div>`
