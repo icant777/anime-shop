@@ -66,16 +66,18 @@
       skin() {
         return this.skins.find(s => s.id === this.skinId) || this.skins[0];
       },
-      // 跑 / 跳 都逐帧播放；翻转换肤、拖拽、其他待机动作用静态立绘
+      // 是否叠加 CSS 颠簸（跳跃/翻转/待机动作由各自动画接管，此处只管基础奔跑节奏）
       isAnimated() {
-        return (this.running && !this.flipping && !this.dragging && !this.idleAct) || this.jumping;
+        return this.running && !this.dragging && !this.jumping && !this.flipping && !this.idleAct;
       },
+      // 速度线/扬尘/影子节奏的显示条件：待机动作期间也保持跑动粒子，避免"跑着跑着粒子消失"
       isRun() {
-        return this.running && !this.jumping && !this.flipping && !this.dragging && !this.idleAct;
+        return this.running && !this.jumping && !this.flipping && !this.dragging;
       },
-      // 当前显示的图片：动画态取当前皮肤的当前帧，静态态用立绘
+      // 关键：显示的图片永远是"当前皮肤 + 当前全局帧"，任何状态都不退回静态立绘。
+      // 帧定时器永不停、帧号全局共享 ⇒ 切换皮肤/悬停/跳跃/待机动作后都持续逐帧奔跑，绝不变静止。
       currentImg() {
-        return this.isAnimated ? this.skin.frames[this.frameIdx % this.skin.frames.length] : this.skin.img;
+        return this.skin.frames[this.frameIdx % this.skin.frames.length];
       },
       style() {
         const base = this.pos
