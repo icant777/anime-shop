@@ -52,16 +52,18 @@
         dragging: false,
         dragMoved: false,
         _sx: 0, _sy: 0, _ox: 0, _oy: 0,
-        _bubbleTimer: null, _jumpTimer: null, _actTimer: null, _blinkTimer: null
+        _bubbleTimer: null, _jumpTimer: null, _actTimer: null, _blinkTimer: null,
+        _pickTimers: [], _hoverJumpTimer: null
       };
     },
     computed: {
       skin() {
         return this.skins.find(s => s.id === this.skinId) || this.skins[0];
       },
-      // 真正跑动的条件：待机、不跳、不翻、不拖、无其他待机动作
+      // 真正跑动的条件：running 开、不在跳/翻/拖、无其他待机动作。
+      // 注意：hover 不阻止奔跑——鼠标停留时也应继续跑，只有 jump 期间才短暂中断
       isRun() {
-        return this.running && !this.jumping && !this.flipping && !this.dragging && !this.idleAct && !this.hover;
+        return this.running && !this.jumping && !this.flipping && !this.dragging && !this.idleAct;
       },
       style() {
         const base = this.pos
@@ -150,17 +152,35 @@
         this.react();
         this.showSkins = !this.showSkins;
       },
+      // 清理所有未完成的换肤计时器，防止快速连点交错
+      clearPickTimers() {
+        this._pickTimers.forEach(t => clearTimeout(t));
+        this._pickTimers = [];
+      },
+      laterPick(fn, ms) {
+        this._pickTimers.push(setTimeout(fn, ms));
+      },
       pick(id) {
         if (id === this.skinId) { this.showSkins = false; return; }
+        // 先清掉上一次换肤残留的全部 timer，避免 flipping/jumping 被旧回调改乱
+        this.clearPickTimers();
+        clearTimeout(this._jumpTimer);
         this.showSkins = false;
         this.idleAct = '';
+        this.jumping = false;
         this.flipping = true;
-        setTimeout(() => {
+        this.laterPick(() => {
           this.skinId = id;
           localStorage.setItem('sg_pet_skin', id);
         }, 350);
-        setTimeout(() => { this.flipping = false; }, 760);
-        setTimeout(() => { this.react(); this.say('换好啦！我是' + this.skin.name + '～'); }, 780);
+        this.laterPick(() => { this.flipping = false; }, 760);
+        this.laterPick(() => {
+          // 换肤结束后跳一下并说话；跳跃结束 isRun 自动恢复，三个皮肤一致
+          this.jumping = true;
+          clearTimeout(this._jumpTimer);
+          this._jumpTimer = setTimeout(() => { this.jumping = false; }, 780);
+          this.say('换好啦！我是' + this.skin.name + '～');
+        }, 780);
       },
       onDown(e) {
         this.dragging = true;

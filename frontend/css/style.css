@@ -353,8 +353,8 @@ img{display:block;max-width:100%}
   87% {transform:translateY(-9px) scale(.96,1.05)}    /* 回弹 */
   100%{transform:translateY(0)    scale(1,1)}
 }
-/* hover 停留（跳跃结束后）：轻微抬起放大 */
-.deskpet.is-hover:not(.is-jump) .pet-inner{transform:translateY(-3px) scale(1.05)}
+/* hover 停留（非跳跃、非奔跑时）：轻微抬起放大；奔跑时让位给 pet-run 动画 */
+.deskpet.is-hover:not(.is-jump) .pet-inner:not(.is-running){transform:translateY(-3px) scale(1.05)}
 .deskpet.is-drag .pet-body{cursor:grabbing}
 .deskpet.is-drag .pet-inner{animation:none;transform:scale(1.05)}
 .deskpet.is-blink .pet-inner img{filter:drop-shadow(0 7px 9px rgba(61,43,71,.24)) brightness(1.12)}
