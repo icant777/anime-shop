@@ -106,7 +106,7 @@
         </div>
 
         <!-- 主页横幅图（保留整张图片上半部分，界面不够大已在 CSS 高度加大到 200px） -->
-        <img class="banner-img" src="assets/img/banner.jpg" alt="主页横幅">
+        <img class="banner-img" src="assets/img/banner.jpg?v=20261127g" alt="主页横幅">
 
         <div class="quick">
           <div class="q glass" @click="$router.push('/goods')">
