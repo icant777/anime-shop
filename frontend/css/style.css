@@ -290,10 +290,10 @@ img{display:block;max-width:100%}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
 
 /* ---------- 桌面宠物（动作版：奔跑 / 跳跃） ---------- */
-.deskpet{position:fixed;z-index:85;width:104px;text-align:center;user-select:none;
+.deskpet{position:fixed;z-index:85;width:116px;text-align:center;user-select:none;
   --pet-color:#5ecdc1;--rx:0deg;--ry:0deg;--gx:50%;
   perspective:620px;perspective-origin:50% 40%}
-.pet-body{position:relative;width:104px;height:128px;cursor:pointer;
+.pet-body{position:relative;width:116px;height:142px;cursor:pointer;
   display:flex;align-items:flex-end;justify-content:center;
   transform-style:preserve-3d;
   transform:rotateX(var(--rx)) rotateY(var(--ry));
@@ -306,14 +306,11 @@ img{display:block;max-width:100%}
   background:radial-gradient(ellipse at var(--gx) 22%,rgba(255,255,255,.55),rgba(255,255,255,0) 55%);
   mix-blend-mode:soft-light;opacity:.85}
 
-/* ===== 原地奔跑：两步一循环，颠簸+前倾+左右换脚 ===== */
-.pet-inner.is-running{animation:pet-run .74s ease-in-out infinite}
+/* ===== 原地奔跑：逐帧图已在动，这里只加轻微颠簸增强节奏 ===== */
+.pet-inner.is-animated{animation:pet-run .52s ease-in-out infinite}
 @keyframes pet-run{
-  0%  {transform:translateY(0)    rotate(-4deg) skewX(-2deg) scaleY(.97)}
-  25% {transform:translateY(-8px) rotate(0deg)   skewX(0)     scaleY(1.04)}
-  50% {transform:translateY(0)    rotate(4deg)   skewX(2deg)  scaleY(.97)}
-  75% {transform:translateY(-8px) rotate(0deg)   skewX(0)     scaleY(1.04)}
-  100%{transform:translateY(0)    rotate(-4deg) skewX(-2deg) scaleY(.97)}
+  0%,100%{transform:translateY(0)}
+  50%    {transform:translateY(-3px)}
 }
 /* 奔跑速度线：身后三条横线向左掠过 */
 .pet-speed{position:absolute;bottom:26px;left:50%;width:96px;height:52px;
@@ -354,7 +351,7 @@ img{display:block;max-width:100%}
   100%{transform:translateY(0)    scale(1,1)}
 }
 /* hover 停留（非跳跃、非奔跑时）：轻微抬起放大；奔跑时让位给 pet-run 动画 */
-.deskpet.is-hover:not(.is-jump) .pet-inner:not(.is-running){transform:translateY(-3px) scale(1.05)}
+.deskpet.is-hover:not(.is-jump) .pet-inner:not(.is-animated){transform:translateY(-3px) scale(1.05)}
 .deskpet.is-drag .pet-body{cursor:grabbing}
 .deskpet.is-drag .pet-inner{animation:none;transform:scale(1.05)}
 .deskpet.is-blink .pet-inner img{filter:drop-shadow(0 7px 9px rgba(61,43,71,.24)) brightness(1.12)}
@@ -395,18 +392,18 @@ img{display:block;max-width:100%}
 @keyframes pet-sparkle{from{opacity:.3;transform:translateY(4px) scale(.8)}to{opacity:1;transform:translateY(-6px) scale(1.15)}}
 
 /* 台词气泡 */
-.pet-bubble{position:absolute;bottom:138px;left:50%;transform:translateX(-50%);
+.pet-bubble{position:absolute;bottom:152px;left:50%;transform:translateX(-50%);
   min-width:130px;max-width:190px;padding:9px 13px;border-radius:14px 14px 14px 3px;
   background:linear-gradient(150deg,#fff,#fff3f9);border:1px solid rgba(255,111,174,.35);
   box-shadow:0 6px 18px rgba(61,43,71,.18);color:var(--txt);font-size:12px;line-height:1.5;
   text-align:left;white-space:normal;animation:pet-bubble-in .3s ease;z-index:2}
-.pet-bubble.with-skins{bottom:238px}
+.pet-bubble.with-skins{bottom:252px}
 .pet-bubble::after{content:'';position:absolute;bottom:-7px;left:12px;
   border-width:8px 8px 0 0;border-style:solid;border-color:#fff3f9 transparent transparent transparent}
 @keyframes pet-bubble-in{from{opacity:0;transform:translateX(-50%) translateY(8px) scale(.9)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
 
 /* 皮肤选择环 */
-.pet-skins{position:absolute;bottom:148px;left:50%;transform:translateX(-50%);
+.pet-skins{position:absolute;bottom:162px;left:50%;transform:translateX(-50%);
   display:flex;gap:8px;padding:8px 10px;border-radius:16px;
   background:rgba(255,255,255,.94);border:1px solid rgba(255,111,174,.3);
   box-shadow:0 8px 22px rgba(61,43,71,.2);z-index:3;animation:pet-bubble-in .25s ease}

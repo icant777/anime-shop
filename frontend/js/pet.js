@@ -1,27 +1,32 @@
 /* ============================================================
-   pet.js — 桌面宠物（动作版：原地奔跑 / 跳跃 / 互动）
+   pet.js — 桌面宠物（逐帧动画版）
    ------------------------------------------------------------
    皮肤：初音未来 / 五条悟 / 炭治郎，默认初音未来
-   动作：
-     · 原地奔跑 —— 待机时持续跑动（颠簸步频 + 前倾 + 扬尘 + 速度线）
-     · 跳跃 —— 鼠标放上去 / 点击时，下蹲蓄力 → 腾空 → 落地压缩
-     · 眨眼 / 随机待机动作（伸懒腰、转圈）/ 翻转换肤
+   动作（真·逐帧，多张图切换）：
+     · 原地奔跑 —— 4 张不同跑步姿势的图循环播放（每 130ms 一帧）
+     · 跳跃 —— 跳跃期间同样逐帧切换（腿在动）+ CSS 腾空位移
+     · 眨眼 / 随机待机动作 / 翻转换肤
+   关键设计：帧定时器永不停、帧序号全局共享，currentImg 按当前皮肤取帧，
+   所以切换皮肤后动画无缝继续，绝不会出现"切完就不动"。
    保留：台词气泡、皮肤环、点击反应、拖拽与位置持久化、鼠标视角倾斜
    ============================================================ */
 (function (global) {
   const SKINS = [
     {
       id: 'miku', name: '初音未来', img: 'assets/img/pet/miku.png', color: '#5ecdc1',
+      frames: [1, 2, 3, 4].map(i => 'assets/img/pet/frames/miku-run-' + i + '.png'),
       face: '♪', hoverFace: '♥',
       lines: ['喵～今天也要元气满满！', '要听我唱歌吗？♪', '初音酱在这里等你哦～', '不过来一起逛逛吗？', '嘿嘿，被你发现了～']
     },
     {
       id: 'gojo', name: '五条悟', img: 'assets/img/pet/gojo.png', color: '#5b7fe8',
+      frames: [1, 2, 3, 4].map(i => 'assets/img/pet/frames/gojo-run-' + i + '.png'),
       face: '✦', hoverFace: '★',
       lines: ['哈哈，最强就是我～', '别被眼罩骗了哦，我看得见', '想买什么？我请客～', '你也是来逛谷子的？', '这种程度，当然没问题啦']
     },
     {
       id: 'tanjiro', name: '炭治郎', img: 'assets/img/pet/tanjiro.png', color: '#e0604c',
+      frames: [1, 2, 3, 4].map(i => 'assets/img/pet/frames/tanjiro-run-' + i + '.png'),
       face: '✿', hoverFace: '♥',
       lines: ['全集中呼吸！', '嗯！这个味道……是好东西！', '一起加油吧！', '今天也要努力啊！', '我闻到你的热情了！']
     }
@@ -44,6 +49,7 @@
         showSkins: false,
         bubble: '',
         bubbleKey: 0,
+        frameIdx: 0,            // 当前帧序号（全局共享，切皮肤不重置）
         rx: 0, ry: 0,           // 鼠标视角倾斜角（度）
         gx: 50,                 // 高光位置百分比
         pos: (() => {
@@ -53,17 +59,23 @@
         dragMoved: false,
         _sx: 0, _sy: 0, _ox: 0, _oy: 0,
         _bubbleTimer: null, _jumpTimer: null, _actTimer: null, _blinkTimer: null,
-        _pickTimers: [], _hoverJumpTimer: null
+        _frameTimer: null, _pickTimers: []
       };
     },
     computed: {
       skin() {
         return this.skins.find(s => s.id === this.skinId) || this.skins[0];
       },
-      // 真正跑动的条件：running 开、不在跳/翻/拖、无其他待机动作。
-      // 注意：hover 不阻止奔跑——鼠标停留时也应继续跑，只有 jump 期间才短暂中断
+      // 跑 / 跳 都逐帧播放；翻转换肤、拖拽、其他待机动作用静态立绘
+      isAnimated() {
+        return (this.running && !this.flipping && !this.dragging && !this.idleAct) || this.jumping;
+      },
       isRun() {
         return this.running && !this.jumping && !this.flipping && !this.dragging && !this.idleAct;
+      },
+      // 当前显示的图片：动画态取当前皮肤的当前帧，静态态用立绘
+      currentImg() {
+        return this.isAnimated ? this.skin.frames[this.frameIdx % this.skin.frames.length] : this.skin.img;
       },
       style() {
         const base = this.pos
@@ -82,17 +94,23 @@
       }
     },
     mounted() {
+      // 预加载所有帧，避免切换时闪白
+      SKINS.forEach(s => s.frames.forEach(src => { const im = new Image(); im.src = src; }));
+      // 帧定时器永不停：切皮肤、hover、跳跃都不影响它
+      this._frameTimer = setInterval(() => { this.frameIdx++; }, 130);
       window.addEventListener('mousemove', this.onGlobalMove, { passive: true });
       this._blinkTimer = setInterval(() => this.blink(), 3200 + Math.random() * 2000);
-      this._actTimer = setInterval(() => this.randomAct(), 7000 + Math.random() * 4000);
+      this._actTimer = setInterval(() => this.randomAct(), 8000 + Math.random() * 5000);
       this.say('嗨！我是' + this.skin.name + '，点我换皮肤～');
     },
     beforeUnmount() {
+      clearInterval(this._frameTimer);
       window.removeEventListener('mousemove', this.onGlobalMove);
       clearTimeout(this._bubbleTimer);
       clearTimeout(this._jumpTimer);
       clearInterval(this._blinkTimer);
       clearInterval(this._actTimer);
+      this.clearPickTimers();
     },
     methods: {
       onGlobalMove(e) {
@@ -115,7 +133,6 @@
       },
       randomAct() {
         if (this.dragging || this.flipping || this.hover || this.jumping) return;
-        // 偶尔停下奔跑做个动作，之后继续跑
         const act = IDLE_ACTS[Math.floor(Math.random() * IDLE_ACTS.length)];
         this.idleAct = act;
         setTimeout(() => { if (this.idleAct === act) this.idleAct = ''; }, 1400);
@@ -138,11 +155,7 @@
         this.say(list[Math.floor(Math.random() * list.length)]);
         this.jump();
       },
-      // 鼠标放上去 → 跳
-      onEnter() {
-        this.hover = true;
-        this.jump();
-      },
+      onEnter() { this.hover = true; this.jump(); },
       onLeave() {
         this.hover = false;
         this.rx = 0; this.ry = 0; this.gx = 50;
@@ -152,17 +165,13 @@
         this.react();
         this.showSkins = !this.showSkins;
       },
-      // 清理所有未完成的换肤计时器，防止快速连点交错
       clearPickTimers() {
         this._pickTimers.forEach(t => clearTimeout(t));
         this._pickTimers = [];
       },
-      laterPick(fn, ms) {
-        this._pickTimers.push(setTimeout(fn, ms));
-      },
+      laterPick(fn, ms) { this._pickTimers.push(setTimeout(fn, ms)); },
       pick(id) {
         if (id === this.skinId) { this.showSkins = false; return; }
-        // 先清掉上一次换肤残留的全部 timer，避免 flipping/jumping 被旧回调改乱
         this.clearPickTimers();
         clearTimeout(this._jumpTimer);
         this.showSkins = false;
@@ -175,7 +184,6 @@
         }, 350);
         this.laterPick(() => { this.flipping = false; }, 760);
         this.laterPick(() => {
-          // 换肤结束后跳一下并说话；跳跃结束 isRun 自动恢复，三个皮肤一致
           this.jumping = true;
           clearTimeout(this._jumpTimer);
           this._jumpTimer = setTimeout(() => { this.jumping = false; }, 780);
@@ -215,10 +223,7 @@
     template: `
       <div class="deskpet" :style="style" :class="{'is-hover':hover,'is-jump':jumping,
            'is-drag':dragging,'is-blink':blinking,'is-flip':flipping}">
-        <!-- 台词气泡 -->
         <div class="pet-bubble" :class="{'with-skins':showSkins}" v-if="bubble" :key="bubbleKey">{{bubble}}</div>
-
-        <!-- 皮肤选择环 -->
         <div class="pet-skins" v-if="showSkins">
           <button v-for="s in skins" :key="s.id" class="pet-skin-btn"
                   :class="{active:s.id===skinId}" :style="{'--sk':s.color}"
@@ -227,24 +232,17 @@
             <span>{{s.name}}</span>
           </button>
         </div>
-
-        <!-- 可倾斜的角色本体 -->
         <div class="pet-body" @mouseenter="onEnter" @mouseleave="onLeave"
              @mousedown="onDown" @click="onClick">
-          <!-- 奔跑速度线（身后） -->
           <div class="pet-speed" v-if="isRun"><i></i><i></i><i></i></div>
-          <div class="pet-inner" :class="{'is-running':isRun, 'act-stretch':idleAct==='act-stretch',
+          <div class="pet-inner" :class="{'is-animated':isAnimated, 'act-stretch':idleAct==='act-stretch',
                'act-tilt':idleAct==='act-tilt','act-spin':idleAct==='act-spin'}">
-            <img :src="skin.img" :alt="skin.name" draggable="false">
+            <img :src="currentImg" :alt="skin.name" draggable="false">
             <div class="pet-gloss"></div>
           </div>
-          <!-- 脚下扬尘（奔跑时出现） -->
           <div class="pet-dust" v-if="isRun"><i></i><i></i><i></i><i></i></div>
-          <!-- 表情与闪光：独立 Z 轴产生视差 -->
           <div class="pet-face" :key="skinId+'-'+(hover?'h':'n')">{{faceText}}</div>
-          <div class="pet-sparkles" v-if="hover">
-            <i style="--i:0">✦</i><i style="--i:1">♥</i><i style="--i:2">✧</i>
-          </div>
+          <div class="pet-sparkles" v-if="hover"><i style="--i:0">✦</i><i style="--i:1">♥</i><i style="--i:2">✧</i></div>
           <div class="pet-shadow" :class="{'is-run':isRun}"></div>
         </div>
         <div class="pet-name">{{skin.name}}</div>
