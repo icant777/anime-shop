@@ -48,7 +48,8 @@
       CouponFab: Widgets.CouponFab,
       SignFab: Widgets.SignFab,
       CouponPanel: Widgets.CouponPanel,
-      SignPanel: Widgets.SignPanel
+      SignPanel: Widgets.SignPanel,
+      DesktopPet: Widgets.DesktopPet
     },
     data() { return { toast: null, user: localStorage.getItem('sg_user') || '' }; },
     methods: {
@@ -93,6 +94,9 @@
           <coupon-fab></coupon-fab>
           <sign-fab></sign-fab>
         </div>
+
+        <!-- 桌面宠物：全站可见 -->
+        <desktop-pet></desktop-pet>
 
         <!-- 弹窗面板 -->
         <coupon-panel ref="couponPanel"></coupon-panel>

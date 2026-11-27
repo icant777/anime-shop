@@ -56,7 +56,7 @@
     { id: 9, goodsCode: 'G-009', goodsName: '咒术回战 霓虹系列 亚克力立牌', category: '立牌', categoryId: 201, minPrice: 45.0, images: '[]' },
     { id: 10, goodsCode: 'G-010', goodsName: '原神 六周年庆典 亚克力立牌', category: '立牌', categoryId: 201, minPrice: 59.0, images: '[]' },
     // 吧唧（202 马口铁吧唧）
-    { id: 11, goodsCode: 'G-011', goodsName: '原神 破格锋镞系列 马口铁徽章', category: '吧唧', categoryId: 202, minPrice: 18.0, images: '[]' },
+    { id: 11, goodsCode: 'G-011', goodsName: '原神 破格锋镞系列 马口铁徽章', category: '吧唧', categoryId: 202, minPrice: 18.0, images: '["assets/img/genshin-tin-badge.jpg"]' },
     { id: 12, goodsCode: 'G-012', goodsName: '咒术回战 横滨5周年 闪粉收藏徽章', category: '吧唧', categoryId: 202, minPrice: 22.0, images: '[]' },
     // 色纸（203 签名色纸）
     { id: 13, goodsCode: 'G-013', goodsName: '原神 无神怜爱的雪国 亚克力色纸', category: '色纸', categoryId: 203, minPrice: 58.0, images: '[]' },
@@ -65,10 +65,10 @@
     { id: 15, goodsCode: 'G-015', goodsName: '原神 胡桃 40cm棉花娃娃', category: '棉花娃娃', categoryId: 204, minPrice: 119.0, images: '[]' },
     { id: 16, goodsCode: 'G-016', goodsName: '排球少年 日向翔阳 10cm棉花娃娃挂件', category: '棉花娃娃', categoryId: 204, minPrice: 49.9, images: '[]' },
     // 手办（205 景品手办）
-    { id: 17, goodsCode: 'G-017', goodsName: 'FURYU 初音未来 泡面压景品手办', category: '手办', categoryId: 205, minPrice: 83.3, images: '[]' },
-    { id: 18, goodsCode: 'G-018', goodsName: '原神 蒙德城主题 粘土人 凯亚', category: '手办', categoryId: 205, minPrice: 329.0, images: '[]' },
+    { id: 17, goodsCode: 'G-017', goodsName: 'FURYU 初音未来 泡面压景品手办', category: '手办', categoryId: 205, minPrice: 83.3, images: '["assets/img/miku-figure.jpg"]' },
+    { id: 18, goodsCode: 'G-018', goodsName: '原神 蒙德城主题 粘土人 凯亚', category: '手办', categoryId: 205, minPrice: 329.0, images: '["assets/img/kaeya-nendoroid.jpg"]' },
     // 周边（痛包 206 / 一番赏 207）
-    { id: 19, goodsCode: 'G-019', goodsName: '初音未来 Spark系列 多功能收纳痛包', category: '痛包', categoryId: 206, minPrice: 128.0, images: '[]' },
+    { id: 19, goodsCode: 'G-019', goodsName: '初音未来 Spark系列 多功能收纳痛包', category: '痛包', categoryId: 206, minPrice: 128.0, images: '["assets/img/miku-tote-bag.jpg"]' },
     { id: 20, goodsCode: 'G-020', goodsName: 'bilibili 一番赏 初音未来 抽赏', category: '周边', categoryId: 207, minPrice: 28.0, images: '[]' }
   ];
   const categoriesSeed = [
@@ -204,8 +204,23 @@
   // 注意：真实库里 G-001=初音、G-002=炭治郎（与 DEMO 假数据编码相反），
   // 所以优先按“商品名关键词”匹配，避免编码冲突。
   const NAME_COVER = [
+    // ===== 实物商品图（必须放在“初音/徽章”等宽泛关键词之前）=====
+    ['马口铁徽章', 'assets/img/genshin-tin-badge.jpg'],
+    ['乐谱笔记本', 'assets/img/miku-music-notebook.png'],
+    ['帆布袋', 'assets/img/miku-canvas-bag.jpg'],
+    ['痛包', 'assets/img/miku-tote-bag.jpg'],
+    ['积木人', 'assets/img/miku-brick-toy.jpg'],
+    ['防滑', 'assets/img/jjk-desk-mat.jpg'],
+    ['凯亚', 'assets/img/kaeya-nendoroid.jpg'],
+    ['泡面压', 'assets/img/miku-figure.jpg'],
+    ['袜子', 'assets/img/miku-socks.jpg'],
+    ['卫衣', 'assets/img/jjk-hoodie.jpg'],
+    ['水杯', 'assets/img/anime-ceramic-mug.jpg'],
+    ['手机壳', 'assets/img/miku-phone-case.png'],
+    ['扭蛋', 'assets/img/jjk-gashapon.png'],
+    ['盒蛋', 'assets/img/jjk-gashapon.png'],
+    ['迷你手办', 'assets/img/genshin-mini-figures.png'],
     ['炭治郎', 'assets/img/tanjiro.jpg'],
-    ['初音', 'assets/img/miku.jpg'],
     ['芙莉莲', 'assets/img/frieren-badge.jpg'],
     ['T恤', 'assets/img/jjk-tshirt.jpg'],
     ['立牌', 'assets/img/gojo-stand.jpg'],
@@ -213,7 +228,8 @@
     ['色纸', 'assets/img/genshin-shikishi.jpg'],
     ['纪念票', 'assets/img/genshin-card.jpg'],
     ['收藏卡', 'assets/img/genshin-card.jpg'],
-    ['徽章', 'assets/img/genshin-card.jpg']
+    ['徽章', 'assets/img/genshin-card.jpg'],
+    ['初音', 'assets/img/miku.jpg']
   ];
   const LOCAL_COVER = {
     'G-001': 'assets/img/miku.jpg',
